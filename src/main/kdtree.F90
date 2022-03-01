@@ -748,7 +748,11 @@ subroutine construct_node(nodeentry, nnode, mymum, level, xmini, xmaxi, npnode, 
     ifirstincell(nnode) = 1
 #endif
  else ! split this node and add children to stack
-    iaxis  = maxloc(xmaxi - xmini,1) ! split along longest axis
+    if (global_build) then
+       iaxis = 1 ! recreate global tree building bug
+    else
+       iaxis  = maxloc(xmaxi - xmini,1) ! split along longest axis
+    endif
     xpivot = xyzcofm(iaxis)          ! split on centre of mass
 
     ! create two children nodes and point to them from current node
