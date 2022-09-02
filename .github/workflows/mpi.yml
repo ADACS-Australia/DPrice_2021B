@@ -21,15 +21,15 @@ jobs:
           - 1
           - 4
         input: # [SETUP, phantom_tests]
-          - ['test', '']
-          - ['testkd', '']
-          - ['testdust', 'dust']
-          - ['testgr', 'gr']
-          - ['testgrav', 'gravity ptmass']
-          - ['testgrowth', 'dustgrowth']
-          - ['testnimhd', 'nimhd']
-          - ['test2', '']
-          - ['testcyl', '']
+          - ['test', 'mpi']
+          - ['testkd', 'mpi']
+          # - ['testdust', 'dust']
+          # - ['testgr', 'gr']
+          # - ['testgrav', 'gravity ptmass']
+          # - ['testgrowth', 'dustgrowth']
+          # - ['testnimhd', 'nimhd']
+          - ['test2', 'mpi']
+          - ['testcyl', 'mpi']
 
     name: |
       MPI test (SETUP=${{ matrix.input[0] }},
