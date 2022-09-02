@@ -47,6 +47,8 @@ subroutine test_increase_mpi_memory(ntests,npass)
 
  integer :: stacksize_orig
 
+ call system("cat /proc/meminfo")
+
  nerr = 0
 
  print*,id,"Original stacksize=",stacksize
