@@ -51,6 +51,7 @@ subroutine test_increase_mpi_memory(ntests,npass)
 
  nerr = 0
  ncheck = 0
+ maxerr = 0.
 
  ! Save original stacksize
  stacksize_orig = stacksize
