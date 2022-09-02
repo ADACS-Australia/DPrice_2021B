@@ -59,9 +59,9 @@ subroutine test_increase_mpi_memory(ntests,npass)
 
  ! Allocate the stacks again at half the size. Assuming that the original allocation
  ! was fine, increasing it by a factor of 1.5 should be no problem.
- call allocate_mpi_memory(stacksize_in=int(stacksize_orig*0.4))
+ call allocate_mpi_memory(stacksize_in=int(stacksize_orig*0.1))
 
- print*,id,"Allocated stacksize=",int(stacksize_orig*0.4)
+ print*,id,"Allocated stacksize=",int(stacksize_orig*0.1)
 
  ! Trigger a stacksize increase - if this doesn't segfault, that's a good sign
  call increase_mpi_memory
