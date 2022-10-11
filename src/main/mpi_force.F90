@@ -14,7 +14,7 @@ module mpiforce
 !
 ! :Runtime parameters: None
 !
-! :Dependencies: dim, io, mpi, mpiutils
+! :Dependencies: dim, io, mpi
 !
  use io,       only:nprocs,fatal
  use dim,      only:minpart,maxfsum,maxxpartveciforce
@@ -25,6 +25,28 @@ module mpiforce
  public :: cellforce
  public :: stackforce
  public :: get_mpitype_of_cellforce
+
+ integer, public :: dtype_cellforce
+
+ integer, parameter :: ndata = 19 ! number of elements in the cell (including padding)
+ integer, parameter :: nbytes_cellforce = 8 * maxxpartveciforce * minpart + &  !  xpartvec(maxxpartveciforce,minpart)
+                                          8 * maxfsum * minpart           + &  !  fsums(maxfsum,minpart)
+                                          8 * 20                          + &  !  fgrav(20)
+                                          8 * 3                           + &  !  xpos(3)
+                                          8                               + &  !  xsizei
+                                          8                               + &  !  rcuti
+                                          8 * minpart                     + &  !  tsmin(minpart)
+                                          8 * minpart                     + &  !  vsigmax(minpart)
+                                          4                               + &  !  icell
+                                          4                               + &  !  npcell
+                                          4 * minpart                     + &  !  arr_index(minpart)
+                                          4                               + &  !  ndrag
+                                          4                               + &  !  nstokes
+                                          4                               + &  !  nsuper
+                                          4                               + &  !  owner
+                                          4                               + &  !  waiting_index
+                                          1 * minpart                     + &  !  iphase(minpart)
+                                          1 * minpart                          !  ibinneigh(minpart)
 
  type cellforce
     sequence
@@ -46,7 +68,7 @@ module mpiforce
     integer          :: waiting_index
     integer(kind=1)  :: iphase(minpart)
     integer(kind=1)  :: ibinneigh(minpart)
-    integer(kind=1)  :: pad(8 - mod(4 * (7 + minpart) + 2*minpart, 8)) !padding to maintain alignment of elements
+    integer(kind=1)  :: pad(8 - mod(nbytes_cellforce, 8)) !padding to maintain alignment of elements
  end type cellforce
 
  type stackforce
@@ -59,20 +81,17 @@ module mpiforce
 
 contains
 
-subroutine get_mpitype_of_cellforce(dtype)
+subroutine get_mpitype_of_cellforce
 #ifdef MPI
  use mpi
- use mpiutils, only:mpierr
  use io,       only:error
 
- integer, parameter              :: ndata = 19
-
- integer, intent(out)            :: dtype
  integer                         :: nblock, blens(ndata), mpitypes(ndata)
  integer(kind=MPI_ADDRESS_KIND)  :: disp(ndata)
 
  type(cellforce)                 :: cell
  integer(kind=MPI_ADDRESS_KIND)  :: addr,start,lb,extent
+ integer                         :: mpierr
 
  nblock = 0
 
@@ -187,23 +206,22 @@ subroutine get_mpitype_of_cellforce(dtype)
  disp(nblock) = addr - start
 
  nblock = nblock + 1
- blens(nblock) = 8 - mod(4 * (7 + minpart) + 2*minpart, 8)
+ blens(nblock) = 8 - mod(nbytes_cellforce, 8)
  mpitypes(nblock) = MPI_INTEGER1
  call MPI_GET_ADDRESS(cell%pad,addr,mpierr)
  disp(nblock) = addr - start
 
- call MPI_TYPE_CREATE_STRUCT(nblock,blens(1:nblock),disp(1:nblock),mpitypes(1:nblock),dtype,mpierr)
- call MPI_TYPE_COMMIT(dtype,mpierr)
+ call MPI_TYPE_CREATE_STRUCT(nblock,blens(1:nblock),disp(1:nblock),mpitypes(1:nblock),dtype_cellforce,mpierr)
+ call MPI_TYPE_COMMIT(dtype_cellforce,mpierr)
 
  ! check extent okay
- call MPI_TYPE_GET_EXTENT(dtype,lb,extent,mpierr)
+ call MPI_TYPE_GET_EXTENT(dtype_cellforce,lb,extent,mpierr)
  if (extent /= sizeof(cell)) then
     call error('mpi_force','MPI_TYPE_GET_EXTENT has calculated the extent incorrectly')
  endif
 
 #else
- integer, intent(out) :: dtype
- dtype = 0
+ dtype_cellforce = 0
 #endif
 
 end subroutine get_mpitype_of_cellforce
